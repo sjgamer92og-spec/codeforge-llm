@@ -1,0 +1,97 @@
+# ============================================================
+# CodeForge-LLM Training Configuration
+# Adjust these settings based on your GPU VRAM:
+# - 8GB VRAM: Use model 7B, batch_size 1, max_seq_length 512
+# - 16GB VRAM: Use model 7B-13B, batch_size 2, max_seq_length 1024
+# - 24GB VRAM: Use model 13B, batch_size 4, max_seq_length 2048
+# ============================================================
+
+# Model Configuration
+model:
+  base_model: "deepseek-ai/deepseek-coder-6.7b-base"  # or "codellama/CodeLlama-7b-Python", "Qwen/Qwen2.5-Coder-7B"
+  model_max_length: 2048
+  trust_remote_code: true
+
+# LoRA Configuration (QLoRA for memory efficiency)
+lora:
+  r: 64                    # LoRA rank (higher = more capacity, more memory)
+  lora_alpha: 128          # Scaling factor (typically 2x r)
+  lora_dropout: 0.05
+  target_modules:
+    - "q_proj"
+    - "k_proj"
+    - "v_proj"
+    - "o_proj"
+    - "gate_proj"
+    - "up_proj"
+    - "down_proj"
+  bias: "none"
+  task_type: "CAUSAL_LM"
+
+# Quantization Configuration (4-bit for VRAM savings)
+quantization:
+  load_in_4bit: true
+  bnb_4bit_compute_dtype: "bfloat16"
+  bnb_4bit_use_double_quant: true
+  bnb_4bit_quant_type: "nf4"
+
+# Training Configuration
+training:
+  output_dir: "./checkpoints/codeforge-llm"
+  num_train_epochs: 3
+  per_device_train_batch_size: 2
+  per_device_eval_batch_size: 2
+  gradient_accumulation_steps: 4    # Effective batch = batch_size * grad_acc * GPUs
+  learning_rate: 2.0e-4
+  weight_decay: 0.01
+  warmup_ratio: 0.03
+  lr_scheduler_type: "cosine"
+  logging_steps: 10
+  save_strategy: "steps"
+  save_steps: 200
+  eval_strategy: "steps"
+  eval_steps: 200
+  save_total_limit: 3
+  load_best_model_at_end: true
+  metric_for_best_model: "eval_loss"
+  greater_is_better: false
+  bf16: true                        # Use bf16 if GPU supports it (RTX 30xx+)
+  fp16: false                       # Use fp16 if no bf16 support
+  gradient_checkpointing: true      # Saves memory, slows training slightly
+  optim: "paged_adamw_8bit"         # 8-bit optimizer for memory savings
+  group_by_length: true
+  report_to: "wandb"                # or "tensorboard", "none"
+  run_name: "codeforge-7b-v1"
+
+# Dataset Configuration
+dataset:
+  # Use HuggingFace datasets or local paths
+  train_datasets:
+    - name: "iamtarun/python_code_instructions_18k_alpaca"
+      split: "train"
+      text_column: "prompt"
+      sample_size: -1  # -1 = use all
+    - name: "TokenBender/code_instructions_122k_alpaca_style"
+      split: "train"
+      text_column: "prompt"
+      sample_size: 50000
+  eval_datasets:
+    - name: "iamtarun/python_code_instructions_18k_alpaca"
+      split: "train[:1000]"
+      text_column: "prompt"
+  
+  # Instruction template (Alpaca format)
+  template: "alpaca"
+  # Options: "alpaca", "chatml", "llama2", "deepseek"
+
+# Data Preprocessing
+preprocessing:
+  max_seq_length: 2048
+  padding_side: "right"
+  truncation: true
+  add_eos_token: true
+
+# WandB Logging (optional)
+wandb:
+  project: "codeforge-llm"
+  entity: null  # Your wandb username or team
