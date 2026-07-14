@@ -1,0 +1,67 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environments
+venv/
+ENV/
+env/
+.venv/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ML Model Files
+models/
+checkpoints/
+*.bin
+*.safetensors
+*.gguf
+*.pt
+*.pth
+*.ckpt
+*.onnx
+
+# Logs & Outputs
+logs/
+outputs/
+results/
+wandb/
+runs/
+*.log
+
+# Data
+data/
+datasets/
+*.jsonl
+*.parquet
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Hugging Face Cache
+.cache/
+transformers_cache/
